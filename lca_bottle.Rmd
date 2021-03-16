@@ -1,0 +1,115 @@
+---
+title: "LCA Bottles"
+author: "Allison Bailey"
+date: "3/15/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library("tidyverse")
+library("janitor")
+library("ggsci")
+
+```
+
+```{r}
+# call in the data downloaded from GABI, clean data, give a name to the environmental categories, prep the data by mutating new column with type, and select the data we want to merge together. 
+aluminum_clean <- read_csv("aluminum_final.csv") %>%
+  clean_names() %>%
+  rename("category" = "x1") %>%
+  rename("baseline" = "medium") %>%
+  mutate(type = "aluminum") %>%
+  select("category", "low", "baseline", "high", "type") %>%
+  drop_na()
+
+pet_clean <- read_csv("pet_final.csv") %>%
+  clean_names() %>%
+  rename("category" = "x1") %>%
+  mutate(type = "PET") %>%
+  rename("baseline" = "medium") %>%
+   select("category", "low", "baseline", "high", "type") %>%
+  drop_na() 
+
+glass_clean <- read_csv("glass_final.csv") %>%
+  clean_names() %>%
+  rename("category" = "x1") %>%
+  rename("baseline" = "medium") %>%
+   mutate(type = "glass") %>%
+   select("category", "low", "baseline", "high", "type") %>%
+  drop_na()
+
+```
+
+```{r}
+# Bind data together
+bottle_bind <- rbind(glass_clean, pet_clean, aluminum_clean)
+```
+
+```{r}
+# generate a new csv from the binded data and rename category variables with easier names.
+
+bottle_data <- write_csv(bottle_bind, 'employee_bind.csv') 
+
+#bottle_data[bottle_data==0] <- NA
+
+```
+
+```{r}
+# rename category variables to simplify
+
+bottle_data$category[bottle_data$category == "TRACI 2.1, Acidification [kg SO2 eq.]"] = "Acidification"
+bottle_data$category[bottle_data$category == "TRACI 2.1, Ecotoxicity (recommended) [CTUe]"] = "Ecotoxicity"
+bottle_data$category[bottle_data$category == "TRACI 2.1, Eutrophication [kg N eq.]"] = "Eutrophication"
+bottle_data$category[bottle_data$category == "TRACI 2.1, Global Warming Air, excl. biogenic carbon [kg CO2 eq.]"] = "Global Warming Air, no bc"
+bottle_data$category[bottle_data$category == "TRACI 2.1, Global Warming Air, incl. biogenic carbon [kg CO2 eq.]"] = "Global Warming Air"
+bottle_data$category[bottle_data$category == "TRACI 2.1, Human Health Particulate Air [kg PM2.5 eq.]"] = "Human Health Particulate Air"
+bottle_data$category[bottle_data$category == "TRACI 2.1, Human toxicity, cancer (recommended) [CTUh]"] = "Human Toxicity"
+bottle_data$category[bottle_data$category == "TRACI 2.1, Human toxicity, non-canc. (recommended) [CTUh]"] = "Human toxicity, non-canc."
+bottle_data$category[bottle_data$category == "TRACI 2.1, Ozone Depletion Air [kg CFC 11 eq.]"] = "Ozone Depletion Air"
+bottle_data$category[bottle_data$category == "TRACI 2.1, Resources, Fossil fuels [MJ surplus energy]"] = "Resources, Fossil fuels"
+bottle_data$category[bottle_data$category == "TRACI 2.1, Smog Air [kg O3 eq.]"] = "Smog Air"
+
+
+
+```
+
+```{r}
+# filter out Ozone, Human Health, GWA no bc, Resources. and add together human toxicity
+
+bottle_final <- bottle_data %>%
+  filter(category == "Acidification" | category == "Ecotoxicity" | category == "Eutrophication" | category == "Global Warming Air" | category == "Smog Air" | category == "Human Toxicity" )
+
+```
+
+```{r}
+# create normalize function
+
+normalize <- function(x) {
+return ((x - min(x)) / (max(x) - min(x)))
+}
+```
+
+```{r}
+# normalize the data
+bottle_final$low_norm<-normalize(bottle_final$low)
+bottle_final$base_norm<-normalize(bottle_final$baseline)
+bottle_final$high_norm<-normalize(bottle_final$high)
+
+```
+
+```{r}
+
+bottle_baseline <- ggplot(data = bottle_final, aes(y = base_norm,
+                                             fill = type,
+                                             x = category)) +
+            geom_bar(stat = "identity", position=position_dodge(), show.legend = TRUE) +
+            theme_minimal() +
+  scale_fill_jco()
+
+bottle_baseline
+```
+

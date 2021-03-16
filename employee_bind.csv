@@ -1,0 +1,34 @@
+category,low,baseline,high,type
+"TRACI 2.1, Acidification [kg SO2 eq.]",0.00277,0.0035,0,glass
+"TRACI 2.1, Ecotoxicity (recommended) [CTUe]",0.0167,0.0208,0,glass
+"TRACI 2.1, Eutrophication [kg N eq.]",1.53e-4,1.93e-4,0,glass
+"TRACI 2.1, Global Warming Air, excl. biogenic carbon [kg CO2 eq.]",0.482,0.607,0,glass
+"TRACI 2.1, Global Warming Air, incl. biogenic carbon [kg CO2 eq.]",0.482,0.606,0,glass
+"TRACI 2.1, Human Health Particulate Air [kg PM2.5 eq.]",1.01e-4,1.27e-4,0,glass
+"TRACI 2.1, Human toxicity, cancer",2.59e-8,3.28e-8,0,glass
+"TRACI 2.1, Human toxicity, non-canc. (recommended) [CTUh]",2.57e-8,3.25e-8,0,glass
+"TRACI 2.1, Ozone Depletion Air [kg CFC 11 eq.]",1.68e-15,2.12e-15,0,glass
+"TRACI 2.1, Resources, Fossil fuels [MJ surplus energy]",0.858,1.09,0,glass
+"TRACI 2.1, Smog Air [kg O3 eq.]",0.0432,0.0545,0,glass
+"TRACI 2.1, Acidification [kg SO2 eq.]",4.43e-4,3.69e-4,2.21e-4,PET
+"TRACI 2.1, Ecotoxicity (recommended) [CTUe]",0.0888,0.0661,0.0209,PET
+"TRACI 2.1, Eutrophication [kg N eq.]",4.71e-5,5.34e-5,6.61e-5,PET
+"TRACI 2.1, Global Warming Air, excl. biogenic carbon [kg CO2 eq.]",0.139,0.123,0.0925,PET
+"TRACI 2.1, Global Warming Air, incl. biogenic carbon [kg CO2 eq.]",0.139,0.123,0.0924,PET
+"TRACI 2.1, Human Health Particulate Air [kg PM2.5 eq.]",2.23e-5,1.86e-5,1.13e-5,PET
+"TRACI 2.1, Human toxicity, cancer",8.49e-9,6.72e-9,3.2e-9,PET
+"TRACI 2.1, Human toxicity, non-canc. (recommended) [CTUh]",8.25e-9,6.54e-9,3.13e-9,PET
+"TRACI 2.1, Ozone Depletion Air [kg CFC 11 eq.]",5.89e-7,4.34e-7,1.25e-7,PET
+"TRACI 2.1, Resources, Fossil fuels [MJ surplus energy]",0.434,0.355,0.197,PET
+"TRACI 2.1, Smog Air [kg O3 eq.]",0.00661,0.00558,0.00352,PET
+"TRACI 2.1, Acidification [kg SO2 eq.]",0.00184,0.00112,3.9e-4,aluminum
+"TRACI 2.1, Ecotoxicity (recommended) [CTUe]",0.00907,0.0059,0.00273,aluminum
+"TRACI 2.1, Eutrophication [kg N eq.]",5.52e-5,3.73e-5,1.95e-5,aluminum
+"TRACI 2.1, Global Warming Air, excl. biogenic carbon [kg CO2 eq.]",0.405,0.256,0.107,aluminum
+"TRACI 2.1, Global Warming Air, incl. biogenic carbon [kg CO2 eq.]",0.405,0.255,0.106,aluminum
+"TRACI 2.1, Human Health Particulate Air [kg PM2.5 eq.]",1.68e-4,9.75e-5,2.71e-5,aluminum
+"TRACI 2.1, Human toxicity, cancer",1.57e-8,9.14e-9,2.6e-9,aluminum
+"TRACI 2.1, Human toxicity, non-canc. (recommended) [CTUh]",1.55e-8,9.04e-9,2.56e-9,aluminum
+"TRACI 2.1, Ozone Depletion Air [kg CFC 11 eq.]",5.81e-12,3.59e-12,1.37e-12,aluminum
+"TRACI 2.1, Resources, Fossil fuels [MJ surplus energy]",0.439,0.296,0.154,aluminum
+"TRACI 2.1, Smog Air [kg O3 eq.]",0.0219,0.0142,0.00643,aluminum

@@ -1,0 +1,12 @@
+﻿,Medium,Low,High
+"TRACI 2.1, Acidification [kg SO2 eq.]",0.0035,0.00277,0
+"TRACI 2.1, Ecotoxicity (recommended) [CTUe]",0.0208,0.0167,0
+"TRACI 2.1, Eutrophication [kg N eq.]",0.000193,0.000153,0
+"TRACI 2.1, Global Warming Air, excl. biogenic carbon [kg CO2 eq.]",0.607,0.482,0
+"TRACI 2.1, Global Warming Air, incl. biogenic carbon [kg CO2 eq.]",0.606,0.482,0
+"TRACI 2.1, Human Health Particulate Air [kg PM2.5 eq.]",0.000127,0.000101,0
+"TRACI 2.1, Human toxicity, cancer",3.28E-08,2.59E-08,0
+"TRACI 2.1, Human toxicity, non-canc. (recommended) [CTUh]",3.25E-08,2.57E-08,0
+"TRACI 2.1, Ozone Depletion Air [kg CFC 11 eq.]",2.12E-15,1.68E-15,0
+"TRACI 2.1, Resources, Fossil fuels [MJ surplus energy]",1.09,0.858,0
+"TRACI 2.1, Smog Air [kg O3 eq.]",0.0545,0.0432,0
