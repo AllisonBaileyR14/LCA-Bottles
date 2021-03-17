@@ -9,15 +9,16 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 library("tidyverse")
 library("janitor")
 library("ggsci")
-library("scales")
+library("knitr")
+library("kableExtra")
 
 ```
 
-```{r}
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 # call in the data downloaded from GABI, clean data, give a name to the environmental categories, prep the data by mutating new column with type, and select the data we want to merge together. 
 aluminum_clean <- read_csv("aluminum_final.csv") %>%
   clean_names() %>%
@@ -42,12 +43,12 @@ glass_clean <- read_csv("glass_final.csv") %>%
 
 ```
 
-```{r}
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 # Bind data together
 bottle_bind <- rbind(glass_clean, pet_clean, aluminum_clean)
 ```
 
-```{r}
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 # generate a new csv from the binded data and rename category variables with easier names.
 
 bottle_data <- write_csv(bottle_bind, 'bottle_bind.csv') 
@@ -56,7 +57,7 @@ bottle_data <- write_csv(bottle_bind, 'bottle_bind.csv')
 
 ```
 
-```{r}
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 # rename category variables to simplify
 
 bottle_data$category[bottle_data$category == "TRACI 2.1, Acidification [kg SO2 eq.]"] = "Acidification"
@@ -74,7 +75,7 @@ bottle_data$category[bottle_data$category == "TRACI 2.1, Smog Air [kg O3 eq.]"] 
 
 ```
 
-```{r}
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 # filter out Ozone, Human Health, GWA no bc, Resources. and add together human toxicity
 
 bottle_final <- bottle_data %>%
@@ -82,22 +83,41 @@ bottle_final <- bottle_data %>%
 
 ```
 
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+# create a table with kable with numbers NOT normalized. 
+
+bottle_table <- bottle_final %>%
+  select(category, type, high, low, baseline) %>%
+kable(digits = 5,
+        caption = "Bottle Recycling Scenarios (PET, Aluminum, Glass).") %>%
+  add_header_above(header = c(" " = 1, "Aluminum Contribution Matrix" = 4))
+bottle_table
+```
 
 
-```{r}
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 
 bottle_baseline <- ggplot(data = bottle_final, aes(y = base_norm,
                                              fill = type,
                                              x = category)) +
             geom_bar(stat = "identity", position=position_dodge(), show.legend = TRUE) +
             theme_minimal() +
-  scale_fill_jco() +
-  coord_flip()
+  coord_flip() +
+  labs(x = "Environmental Category",
+       y = "Baseline",
+       title = "Baseline Bottle LCA") +
+  scale_fill_jco(name = "Bottle Type", labels = c("Aluminum (50% recycling)", "Glass (750g mass)", "PET (30% recycling)")) +
+   theme(
+    plot.title=element_text( hjust=.5, vjust=0.1, face='bold')
+  )
 
 bottle_baseline
+
 ```
 
-```{r}
+
+
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
 #pivot longer aluminum data
 bottle_alum <- bottle_final %>%
   filter(type == "aluminum") %>%
@@ -110,14 +130,96 @@ aluminum_scenario <- ggplot(data = bottle_alum, aes(y= amount,
             geom_bar(stat = "identity", position=position_dodge(), show.legend = TRUE) +
             theme_minimal() +
   scale_fill_jco() +
-  coord_flip()
+  coord_flip() +
+    labs(x = "Environmental Category",
+       y = "Baseline",
+       title = "Aluminum Can Recycling Scenarios") +
+  scale_fill_jco(name = "Scenarios", labels = c("Baseline (50% recycling)", "High (100% recycling)", "Low (0% recycling)")) +
+   theme(
+    plot.title=element_text( hjust=.5, vjust=0.1, face='bold')
+  )
 
 aluminum_scenario
 
 
 
 ```
-```{r}
+
+Aluminum Contribution Analysis:
+100% of CF4: Ingot Production
+
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+# create aluminum contribution table
+
+alum_cont <- read_csv("aluminum_contribution.csv") %>%
+clean_names() %>%
+  drop_na() %>%
+  select(category, production_total, transportation_total, end_of_life, total) %>%
+  rename(Category = "category", Production = "production_total", Transportation = "transportation_total", EOL = "end_of_life", Total = "total" )
+
+# rename category variables to simplify
+
+alum_cont$Category[alum_cont$Category == "TRACI 2.1, Acidification [kg SO2 eq.]"] = "Acidification"
+alum_cont$Category[alum_cont$Category == "TRACI 2.1, Ecotoxicity (recommended) [CTUe]"] = "Ecotoxicity"
+alum_cont$Category[alum_cont$Category == "TRACI 2.1, Eutrophication [kg N eq.]"] = "Eutrophication"
+alum_cont$Category[alum_cont$Category == "TRACI 2.1, Global Warming Air, incl. biogenic carbon [kg CO2 eq.]"] = "Global Warming Air"
+alum_cont$Category[alum_cont$Category == "TRACI 2.1, Human Health Particulate Air [kg PM2.5 eq.]"] = "Human Health Particulate Air"
+alum_cont$Category[alum_cont$Category == "TRACI 2.1, Human toxicity, cancer"] = "Human Toxicity, Cancer"
+alum_cont$Category[alum_cont$Category == "TRACI 2.1, Human toxicity, non-canc. (recommended) [CTUh]"] = "Human Toxicity, No Cancer"
+alum_cont$Category[alum_cont$Category == "TRACI 2.1, Ozone Depletion Air [kg CFC 11 eq.]"] = "Ozone Depletion Air"
+alum_cont$Category[alum_cont$Category == "TRACI 2.1, Resources, Fossil fuels [MJ surplus energy]"] = "Resources, Fossil fuels"
+alum_cont$Category[alum_cont$Category == "TRACI 2.1, Smog Air [kg O3 eq.]"] = "Smog Air"
+
+alum_cont %>%
+kable(digits = 5,
+        caption = "Aluminum Contribution Matrix of phases of the lifecycle.") %>%
+  add_header_above(header = c(" " = 1, "Aluminum Contribution Matrix" = 4))
+
+```
+
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+alum_long <- read_csv("aluminum_contribution.csv") %>%
+  select(production_norm, transportation_norm, end_of_life_norm, Category) %>%
+  pivot_longer(!Category, names_to = "phases", values_to = "amount") %>%
+  slice(-c(25:93)) 
+
+# rename category variables to simplify
+
+alum_long$Category[alum_long$Category == "TRACI 2.1, Acidification [kg SO2 eq.]"] = "Acidification"
+alum_long$Category[alum_long$Category == "TRACI 2.1, Ecotoxicity (recommended) [CTUe]"] = "Ecotoxicity"
+alum_long$Category[alum_long$Category == "TRACI 2.1, Eutrophication [kg N eq.]"] = "Eutrophication"
+alum_long$Category[alum_long$Category == "TRACI 2.1, Global Warming Air, incl. biogenic carbon [kg CO2 eq.]"] = "Global Warming Air"
+alum_long$Category[alum_long$Category == "TRACI 2.1, Human Health Particulate Air [kg PM2.5 eq.]"] = "Human Health Particulate Air"
+alum_long$Category[alum_long$Category == "TRACI 2.1, Human toxicity, cancer"] = "Human Toxicity, Cancer"
+alum_long$Category[alum_long$Category == "TRACI 2.1, Human toxicity, non-canc. (recommended) [CTUh]"] = "Human Toxicity, No Cancer"
+alum_long$Category[alum_long$Category == "TRACI 2.1, Ozone Depletion Air [kg CFC 11 eq.]"] = "Ozone Depletion Air"
+alum_long$Category[alum_long$Category == "TRACI 2.1, Resources, Fossil fuels [MJ surplus energy]"] = "Resources, Fossil fuels"
+alum_long$Category[alum_long$Category == "TRACI 2.1, Smog Air [kg O3 eq.]"] = "Smog Air"
+
+alum_long_minus <- alum_long %>%
+   filter(Category == "Acidification" | Category == "Ecotoxicity" | Category == "Eutrophication" | Category == "Global Warming Air" | Category == "Smog Air" | Category == "Human Toxicity, Cancer" | Category == "Human Toxicity, No Cancer") 
+
+aluminum_cont_graph <- ggplot(data = alum_long_minus, aes(y= amount,
+                                             fill = phases,
+                                             x = Category)) +
+            geom_bar(stat = "identity", position=position_dodge(), show.legend = TRUE) +
+            theme_minimal() +
+  scale_fill_jco() +
+    labs(x = "Environmental Category",
+       y = "Baseline",
+       title = "Aluminum Can Contribution by Lifecycle Phase") +
+  scale_fill_jco(name = "Phase", labels = c("End of Life", "Production", "Transportation")) +
+   theme(
+    plot.title=element_text( hjust=.5, vjust=0.1, face='bold')
+  ) +
+  coord_flip()
+
+aluminum_cont_graph
+
+```
+
+
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
 #pivot longer pet data
 bottle_pet <- bottle_final %>%
   filter(type == "PET") %>%
@@ -130,12 +232,87 @@ pet_scenario <- ggplot(data = bottle_pet, aes(y= amount,
             geom_bar(stat = "identity", position=position_dodge(), show.legend = TRUE) +
             theme_minimal() +
   scale_fill_jco() +
-  coord_flip()
+  coord_flip() +
+    labs(x = "Environmental Category",
+       y = "Baseline",
+       title = "PET Bottle Recycling Scenarios") +
+  scale_fill_jco(name = "Scenarios", labels = c("Baseline (30% recycling)", "High (90% recycling)", "Low (0% recycling)")) +
+   theme(
+    plot.title=element_text( hjust=.5, vjust=0.1, face='bold')
+  )
 
 pet_scenario
 
 ```
-```{r}
+
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+# create aluminum contribution table
+
+pet_cont <- read_csv("pet_contribution.csv") %>%
+clean_names() %>%
+  drop_na() %>%
+  select(category, production_total, transportation_total, end_of_life, total) %>%
+  rename(Category = "category", Production = "production_total", Transportation = "transportation_total", EOL = "end_of_life", Total = "total" )
+
+# rename category variables to simplify
+
+pet_cont$Category[pet_cont$Category == "TRACI 2.1, Acidification [kg SO2 eq.]"] = "Acidification"
+pet_cont$Category[pet_cont$Category == "TRACI 2.1, Ecotoxicity (recommended) [CTUe]"] = "Ecotoxicity"
+pet_cont$Category[pet_cont$Category == "TRACI 2.1, Eutrophication [kg N eq.]"] = "Eutrophication"
+pet_cont$Category[pet_cont$Category == "TRACI 2.1, Global Warming Air, incl. biogenic carbon [kg CO2 eq.]"] = "Global Warming Air"
+pet_cont$Category[pet_cont$Category == "TRACI 2.1, Human Health Particulate Air [kg PM2.5 eq.]"] = "Human Health Particulate Air"
+pet_cont$Category[pet_cont$Category == "TRACI 2.1, Human toxicity, cancer"] = "Human Toxicity, Cancer"
+pet_cont$Category[pet_cont$Category == "TRACI 2.1, Human toxicity, non-canc. (recommended) [CTUh]"] = "Human Toxicity, No Cancer"
+pet_cont$Category[pet_cont$Category == "TRACI 2.1, Ozone Depletion Air [kg CFC 11 eq.]"] = "Ozone Depletion Air"
+pet_cont$Category[pet_cont$Category == "TRACI 2.1, Resources, Fossil fuels [MJ surplus energy]"] = "Resources, Fossil fuels"
+pet_cont$Category[pet_cont$Category == "TRACI 2.1, Smog Air [kg O3 eq.]"] = "Smog Air"
+
+pet_cont %>%
+kable(digits = 5,
+        caption = "PET Contribution Matrix of phases of the lifecycle.") %>%
+  add_header_above(header = c(" " = 1, "PET Contribution Matrix" = 4))
+
+```
+
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+pet_long <- read_csv("pet_contribution.csv") %>%
+  select(production_norm, transportation_norm, end_of_life_norm, category) %>%
+  pivot_longer(!category, names_to = "phases", values_to = "amount") %>%
+  slice(-c(25:45))
+
+# rename category variables to simplify
+
+pet_long$category[pet_long$category == "TRACI 2.1, Acidification [kg SO2 eq.]"] = "Acidification"
+pet_long$category[pet_long$category == "TRACI 2.1, Ecotoxicity (recommended) [CTUe]"] = "Ecotoxicity"
+pet_long$category[pet_long$category == "TRACI 2.1, Eutrophication [kg N eq.]"] = "Eutrophication"
+pet_long$category[pet_long$category == "TRACI 2.1, Global Warming Air, incl. biogenic carbon [kg CO2 eq.]"] = "Global Warming Air"
+pet_long$category[pet_long$category == "TRACI 2.1, Human Health Particulate Air [kg PM2.5 eq.]"] = "Human Health Particulate Air"
+pet_long$category[pet_long$category == "TRACI 2.1, Human toxicity, cancer"] = "Human Toxicity, Cancer"
+pet_long$category[pet_long$category == "TRACI 2.1, Human toxicity, non-canc. (recommended) [CTUh]"] = "Human Toxicity, No Cancer"
+pet_long$category[pet_long$category == "TRACI 2.1, Ozone Depletion Air [kg CFC 11 eq.]"] = "Ozone Depletion Air"
+pet_long$category[pet_long$category == "TRACI 2.1, Resources, Fossil fuels [MJ surplus energy]"] = "Resources, Fossil fuels"
+pet_long$category[pet_long$category == "TRACI 2.1, Smog Air [kg O3 eq.]"] = "Smog Air"
+
+pet_cont_graph <- ggplot(data = pet_long, aes(y= amount,
+                                             fill = phases,
+                                             x = category)) +
+            geom_bar(stat = "identity", position=position_dodge(), show.legend = TRUE) +
+            theme_minimal() +
+  scale_fill_jco() +
+    labs(x = "Environmental Category",
+       y = "Baseline",
+       title = "PET Bottle Contribution by Lifecycle Phase") +
+  scale_fill_jco(name = "Phase", labels = c("End of Life", "Production", "Transportation")) +
+   theme(
+    plot.title=element_text( hjust=.5, vjust=0.1, face='bold')
+  ) +
+  coord_flip()
+
+pet_cont_graph
+```
+
+
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
 #pivot longer pet data
 bottle_glass <- bottle_final %>%
   filter(type == "glass") %>%
@@ -148,8 +325,84 @@ glass_scenario <- ggplot(data = bottle_glass, aes(y= amount,
             geom_bar(stat = "identity", position=position_dodge(), show.legend = TRUE) +
             theme_minimal() +
   scale_fill_jco() +
-  coord_flip()
+  coord_flip() +
+    labs(x = "Environmental Category",
+       y = "Baseline",
+       title = "Glass Bottle Recycling Scenarios") +
+  scale_fill_jco(name = "Scenarios", labels = c("Baseline (750g Mass)", "Low (450g Mass)")) +
+   theme(
+    plot.title=element_text( hjust=.5, vjust=0.1, face='bold')
+  )
 
 glass_scenario
+
+```
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+# create aluminum contribution table
+
+glass_cont <- read_csv("glass_contribution.csv") %>%
+clean_names() %>%
+ select(category, production_total, transportation_total, end_of_life, total) %>%
+ rename(Category = "category", Production = "production_total", Transportation = "transportation_total", EOL = "end_of_life", Total = "total" ) %>%
+  slice(-c(9:22))
+
+
+# rename category variables to simplify
+
+glass_cont$Category[glass_cont$Category == "TRACI 2.1, Acidification [kg SO2 eq.]"] = "Acidification"
+glass_cont$Category[glass_cont$Category == "TRACI 2.1, Ecotoxicity (recommended) [CTUe]"] = "Ecotoxicity"
+glass_cont$Category[glass_cont$Category == "TRACI 2.1, Eutrophication [kg N eq.]"] = "Eutrophication"
+glass_cont$Category[glass_cont$Category == "TRACI 2.1, Global Warming Air, incl. biogenic carbon [kg CO2 eq.]"] = "Global Warming Air"
+glass_cont$Category[glass_cont$Category == "TRACI 2.1, Human Health Particulate Air [kg PM2.5 eq.]"] = "Human Health Particulate Air"
+glass_cont$Category[glass_cont$Category == "TRACI 2.1, Human toxicity, cancer"] = "Human Toxicity, Cancer"
+glass_cont$Category[glass_cont$Category == "TRACI 2.1, Human toxicity, non-canc. (recommended) [CTUh]"] = "Human Toxicity, No Cancer"
+glass_cont$Category[glass_cont$Category == "TRACI 2.1, Ozone Depletion Air [kg CFC 11 eq.]"] = "Ozone Depletion Air"
+glass_cont$Category[glass_cont$Category == "TRACI 2.1, Resources, Fossil fuels [MJ surplus energy]"] = "Resources, Fossil fuels"
+glass_cont$Category[glass_cont$Category == "TRACI 2.1, Smog Air [kg O3 eq.]"] = "Smog Air"
+
+glass_cont %>%
+kable(digits = 5,
+        caption = "Glass Contribution Matrix of phases of the lifecycle.") %>%
+  add_header_above(header = c(" " = 1, "Glass Contribution Matrix" = 4))
+```
+
+
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+glass_long <- read_csv("glass_contribution.csv") %>%
+  select(production_norm, transportation_norm, end_of_life_norm, category) %>%
+  pivot_longer(!category, names_to = "phases", values_to = "amount") %>%
+  slice(-c(25:66))
+
+# rename category variables to simplify
+
+glass_long$category[glass_long$category == "TRACI 2.1, Acidification [kg SO2 eq.]"] = "Acidification"
+glass_long$category[glass_long$category == "TRACI 2.1, Ecotoxicity (recommended) [CTUe]"] = "Ecotoxicity"
+glass_long$category[glass_long$category == "TRACI 2.1, Eutrophication [kg N eq.]"] = "Eutrophication"
+glass_long$category[glass_long$category == "TRACI 2.1, Global Warming Air, incl. biogenic carbon [kg CO2 eq.]"] = "Global Warming Air"
+glass_long$category[glass_long$category == "TRACI 2.1, Human Health Particulate Air [kg PM2.5 eq.]"] = "Human Health Particulate Air"
+glass_long$category[glass_long$category == "TRACI 2.1, Human toxicity, cancer"] = "Human Toxicity, Cancer"
+glass_long$category[glass_long$category == "TRACI 2.1, Human toxicity, non-canc. (recommended) [CTUh]"] = "Human Toxicity, No Cancer"
+glass_long$category[glass_long$category == "TRACI 2.1, Ozone Depletion Air [kg CFC 11 eq.]"] = "Ozone Depletion Air"
+glass_long$category[glass_long$category == "TRACI 2.1, Resources, Fossil fuels [MJ surplus energy]"] = "Resources, Fossil fuels"
+glass_long$category[glass_long$category == "TRACI 2.1, Smog Air [kg O3 eq.]"] = "Smog Air"
+
+glass_long_minus <- glass_long %>%
+   filter(category == "Acidification" | category == "Ecotoxicity" | category == "Eutrophication" | category == "Global Warming Air" | category == "Smog Air" | category == "Human Toxicity, Cancer" | category == "Human Toxicity, No Cancer") 
+glass_cont_graph <- ggplot(data = glass_long_minus, aes(y= amount,
+                                             fill = phases,
+                                             x = category)) +
+            geom_bar(stat = "identity", position=position_dodge(), show.legend = TRUE) +
+            theme_minimal() +
+  scale_fill_jco() +
+    labs(x = "Environmental Category",
+       y = "Baseline",
+       title = "Glass Bottle Contribution by Lifecycle Phase") +
+  scale_fill_jco(name = "Phase", labels = c("End of Life", "Production", "Transportation")) +
+   theme(
+    plot.title=element_text( hjust=.5, vjust=0.1, face='bold')
+  ) +
+  coord_flip()
+
+glass_cont_graph
 ```
 
