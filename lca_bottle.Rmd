@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library("tidyverse")
 library("janitor")
 library("ggsci")
+library("scales")
 
 ```
 
@@ -23,7 +24,6 @@ aluminum_clean <- read_csv("aluminum_final.csv") %>%
   rename("category" = "x1") %>%
   rename("baseline" = "medium") %>%
   mutate(type = "aluminum") %>%
-  select("category", "low", "baseline", "high", "type") %>%
   drop_na()
 
 pet_clean <- read_csv("pet_final.csv") %>%
@@ -31,7 +31,6 @@ pet_clean <- read_csv("pet_final.csv") %>%
   rename("category" = "x1") %>%
   mutate(type = "PET") %>%
   rename("baseline" = "medium") %>%
-   select("category", "low", "baseline", "high", "type") %>%
   drop_na() 
 
 glass_clean <- read_csv("glass_final.csv") %>%
@@ -39,7 +38,6 @@ glass_clean <- read_csv("glass_final.csv") %>%
   rename("category" = "x1") %>%
   rename("baseline" = "medium") %>%
    mutate(type = "glass") %>%
-   select("category", "low", "baseline", "high", "type") %>%
   drop_na()
 
 ```
@@ -52,7 +50,7 @@ bottle_bind <- rbind(glass_clean, pet_clean, aluminum_clean)
 ```{r}
 # generate a new csv from the binded data and rename category variables with easier names.
 
-bottle_data <- write_csv(bottle_bind, 'employee_bind.csv') 
+bottle_data <- write_csv(bottle_bind, 'bottle_bind.csv') 
 
 #bottle_data[bottle_data==0] <- NA
 
@@ -64,11 +62,10 @@ bottle_data <- write_csv(bottle_bind, 'employee_bind.csv')
 bottle_data$category[bottle_data$category == "TRACI 2.1, Acidification [kg SO2 eq.]"] = "Acidification"
 bottle_data$category[bottle_data$category == "TRACI 2.1, Ecotoxicity (recommended) [CTUe]"] = "Ecotoxicity"
 bottle_data$category[bottle_data$category == "TRACI 2.1, Eutrophication [kg N eq.]"] = "Eutrophication"
-bottle_data$category[bottle_data$category == "TRACI 2.1, Global Warming Air, excl. biogenic carbon [kg CO2 eq.]"] = "Global Warming Air, no bc"
 bottle_data$category[bottle_data$category == "TRACI 2.1, Global Warming Air, incl. biogenic carbon [kg CO2 eq.]"] = "Global Warming Air"
 bottle_data$category[bottle_data$category == "TRACI 2.1, Human Health Particulate Air [kg PM2.5 eq.]"] = "Human Health Particulate Air"
-bottle_data$category[bottle_data$category == "TRACI 2.1, Human toxicity, cancer (recommended) [CTUh]"] = "Human Toxicity"
-bottle_data$category[bottle_data$category == "TRACI 2.1, Human toxicity, non-canc. (recommended) [CTUh]"] = "Human toxicity, non-canc."
+bottle_data$category[bottle_data$category == "TRACI 2.1, Human toxicity, cancer"] = "Human Toxicity, Cancer"
+bottle_data$category[bottle_data$category == "TRACI 2.1, Human toxicity, non-canc. (recommended) [CTUh]"] = "Human Toxicity, No Cancer"
 bottle_data$category[bottle_data$category == "TRACI 2.1, Ozone Depletion Air [kg CFC 11 eq.]"] = "Ozone Depletion Air"
 bottle_data$category[bottle_data$category == "TRACI 2.1, Resources, Fossil fuels [MJ surplus energy]"] = "Resources, Fossil fuels"
 bottle_data$category[bottle_data$category == "TRACI 2.1, Smog Air [kg O3 eq.]"] = "Smog Air"
@@ -81,25 +78,11 @@ bottle_data$category[bottle_data$category == "TRACI 2.1, Smog Air [kg O3 eq.]"] 
 # filter out Ozone, Human Health, GWA no bc, Resources. and add together human toxicity
 
 bottle_final <- bottle_data %>%
-  filter(category == "Acidification" | category == "Ecotoxicity" | category == "Eutrophication" | category == "Global Warming Air" | category == "Smog Air" | category == "Human Toxicity" )
+  filter(category == "Acidification" | category == "Ecotoxicity" | category == "Eutrophication" | category == "Global Warming Air" | category == "Smog Air" | category == "Human Toxicity, Cancer" | category == "Human Toxicity, No Cancer") 
 
 ```
 
-```{r}
-# create normalize function
 
-normalize <- function(x) {
-return ((x - min(x)) / (max(x) - min(x)))
-}
-```
-
-```{r}
-# normalize the data
-bottle_final$low_norm<-normalize(bottle_final$low)
-bottle_final$base_norm<-normalize(bottle_final$baseline)
-bottle_final$high_norm<-normalize(bottle_final$high)
-
-```
 
 ```{r}
 
@@ -108,8 +91,65 @@ bottle_baseline <- ggplot(data = bottle_final, aes(y = base_norm,
                                              x = category)) +
             geom_bar(stat = "identity", position=position_dodge(), show.legend = TRUE) +
             theme_minimal() +
-  scale_fill_jco()
+  scale_fill_jco() +
+  coord_flip()
 
 bottle_baseline
+```
+
+```{r}
+#pivot longer aluminum data
+bottle_alum <- bottle_final %>%
+  filter(type == "aluminum") %>%
+  select(-type, -epa_eq, -low, -high, -baseline) %>%
+  pivot_longer(!category, names_to = "scenario", values_to = "amount")
+
+aluminum_scenario <- ggplot(data = bottle_alum, aes(y= amount,
+                                             fill = scenario,
+                                             x = category)) +
+            geom_bar(stat = "identity", position=position_dodge(), show.legend = TRUE) +
+            theme_minimal() +
+  scale_fill_jco() +
+  coord_flip()
+
+aluminum_scenario
+
+
+
+```
+```{r}
+#pivot longer pet data
+bottle_pet <- bottle_final %>%
+  filter(type == "PET") %>%
+  select(-type, -epa_eq, -low, -high, -baseline) %>%
+  pivot_longer(!category, names_to = "scenario", values_to = "amount")
+
+pet_scenario <- ggplot(data = bottle_pet, aes(y= amount,
+                                             fill = scenario,
+                                             x = category)) +
+            geom_bar(stat = "identity", position=position_dodge(), show.legend = TRUE) +
+            theme_minimal() +
+  scale_fill_jco() +
+  coord_flip()
+
+pet_scenario
+
+```
+```{r}
+#pivot longer pet data
+bottle_glass <- bottle_final %>%
+  filter(type == "glass") %>%
+  select(-type, -epa_eq, -low, -high, -high_norm, -baseline) %>%
+  pivot_longer(!category, names_to = "scenario", values_to = "amount")
+
+glass_scenario <- ggplot(data = bottle_glass, aes(y= amount,
+                                             fill = scenario,
+                                             x = category)) +
+            geom_bar(stat = "identity", position=position_dodge(), show.legend = TRUE) +
+            theme_minimal() +
+  scale_fill_jco() +
+  coord_flip()
+
+glass_scenario
 ```
 
